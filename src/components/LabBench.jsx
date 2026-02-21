@@ -253,7 +253,20 @@ const LabBench = () => {
   const [viewMode, setViewMode] = useState('3d'); // '2d' | '3d'
   const inputRef = useRef(null);
 
-  const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+  const apiBase =
+    import.meta.env.VITE_API_URL ||
+    import.meta.env.VITE_FLASK_API_URL ||
+    'http://localhost:8000';
+
+  const getApiCandidates = useCallback(() => {
+    return [
+      apiBase,
+      'http://localhost:8000',
+      'http://127.0.0.1:8000',
+      'http://localhost:5001',
+      'http://127.0.0.1:5001',
+    ].filter((v, idx, arr) => Boolean(v) && arr.indexOf(v) === idx);
+  }, [apiBase]);
 
   // Auto-analyze if smiles came from URL params
   useEffect(() => {
@@ -272,16 +285,35 @@ const LabBench = () => {
   const runModel = useCallback(async (model, smilesInput) => {
     setRunningModels(prev => new Set(prev).add(model.id));
     try {
-      const res = await fetch(`${apiBase}${model.endpoint}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ smiles: smilesInput }),
-      });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.detail || err.error || `HTTP ${res.status}`);
+      const apiCandidates = getApiCandidates();
+      let lastError = null;
+      let data = null;
+
+      for (const base of apiCandidates) {
+        try {
+          const res = await fetch(`${base}${model.endpoint}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ smiles: smilesInput }),
+          });
+
+          if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            lastError = new Error(err.detail || err.error || `HTTP ${res.status}`);
+            continue;
+          }
+
+          data = await res.json();
+          break;
+        } catch (err) {
+          lastError = err;
+        }
       }
-      const data = await res.json();
+
+      if (!data) {
+        throw lastError || new Error('Failed to fetch prediction');
+      }
+
       setResults(prev => ({ ...prev, [model.id]: { raw: data } }));
     } catch (err) {
       setResults(prev => ({ ...prev, [model.id]: { error: err.message } }));
@@ -292,7 +324,7 @@ const LabBench = () => {
         return next;
       });
     }
-  }, [apiBase]);
+  }, [getApiCandidates]);
 
   // ─── Run all models (ADMET + Targets) simultaneously ──
   const runAllModels = useCallback((smilesInput) => {

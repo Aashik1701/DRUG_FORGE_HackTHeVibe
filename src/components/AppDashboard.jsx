@@ -29,7 +29,10 @@ const AppDashboard = () => {
   const [recentMolecules, setRecentMolecules] = useState([]);
   const [loadingHealth, setLoadingHealth] = useState(true);
 
-  const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+  const apiBase =
+    import.meta.env.VITE_API_URL ||
+    import.meta.env.VITE_FLASK_API_URL ||
+    'http://localhost:8000';
 
   // Fetch model health on mount
   useEffect(() => {

@@ -52,6 +52,20 @@ const Molecule3DViewer = ({
   const [showSurface, setShowSurface] = useState(false);
   const [hoveredAtom, setHoveredAtom] = useState(null);
 
+  const getApiCandidates = useCallback(() => {
+    const envPrimary = import.meta.env.VITE_API_URL;
+    const envLegacy = import.meta.env.VITE_FLASK_API_URL;
+
+    return [
+      'http://localhost:8000',
+      'http://127.0.0.1:8000',
+      envPrimary,
+      envLegacy,
+      'http://localhost:5001',
+      'http://127.0.0.1:5001',
+    ].filter(Boolean);
+  }, []);
+
   /* ── style map ─────────────────────────────────────────────────── */
   const styleForMode = useCallback((mode) => {
     switch (mode) {
@@ -102,20 +116,37 @@ const Molecule3DViewer = ({
       setError(null);
 
       try {
-        const API_URL =
-          import.meta.env.VITE_API_URL || 'http://localhost:5001';
-        const res = await fetch(`${API_URL}/utils/generate-3d`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ smiles }),
-        });
+        const apiCandidates = getApiCandidates();
+        let lastError = null;
+        let mol_block = null;
 
-        if (!res.ok) {
-          const errBody = await res.json().catch(() => ({}));
-          throw new Error(errBody.detail || `Server error ${res.status}`);
+        for (const apiBase of apiCandidates) {
+          try {
+            const res = await fetch(`${apiBase}/utils/generate-3d`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ smiles }),
+            });
+
+            if (!res.ok) {
+              const errBody = await res.json().catch(() => ({}));
+              lastError = new Error(errBody.detail || `Server error ${res.status}`);
+              continue;
+            }
+
+            const payload = await res.json();
+            mol_block = payload?.mol_block;
+            if (mol_block) break;
+            lastError = new Error('Invalid 3D response payload');
+          } catch (err) {
+            lastError = err;
+          }
         }
 
-        const { mol_block } = await res.json();
+        if (!mol_block) {
+          throw lastError || new Error('Unable to reach backend');
+        }
+
         if (!isMounted) return;
         molBlockRef.current = mol_block;
 
@@ -176,7 +207,9 @@ const Molecule3DViewer = ({
         if (spin) viewer.spin('y', 0.5);
       } catch (err) {
         console.error('[3DViewer] Error:', err);
-        if (isMounted) setError('Could not generate 3D structure');
+        if (isMounted) {
+          setError('Could not generate 3D structure. Ensure backend is running on 8000 or 5001.');
+        }
       } finally {
         if (isMounted) setIsLoading(false);
       }
@@ -189,7 +222,7 @@ const Molecule3DViewer = ({
       if (viewerInstance.current) viewerInstance.current.spin(false);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [smiles]);
+  }, [smiles, getApiCandidates]);
 
   /* ── screenshot ────────────────────────────────────────────────── */
   const handleScreenshot = useCallback(() => {
@@ -246,7 +279,7 @@ const Molecule3DViewer = ({
             onClick={() => setViewMode('line')}
           />
 
-          <div className="w-px h-5 bg-white/20 mx-1" />
+          <div className="w-px h-5 mx-1 bg-white/20" />
 
           <ControlButton
             icon={Layers}
@@ -280,7 +313,7 @@ const Molecule3DViewer = ({
       {/* ── Loading ───────────────────────────────────────────────── */}
       {isLoading && (
         <div
-          className="absolute inset-0 flex items-center justify-center rounded-xl z-10"
+          className="absolute inset-0 z-10 flex items-center justify-center rounded-xl"
           style={{ backgroundColor: 'rgba(0,0,0,0.3)', pointerEvents: 'none' }}
         >
           <Loader2 className="w-8 h-8 text-cyan-400 animate-spin" />
@@ -289,7 +322,7 @@ const Molecule3DViewer = ({
 
       {/* ── Error ─────────────────────────────────────────────────── */}
       {error && !isLoading && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center text-rose-400 text-sm p-4 text-center z-20">
+        <div className="absolute inset-0 z-20 flex flex-col items-center justify-center p-4 text-sm text-center text-rose-400">
           <AlertTriangle className="w-6 h-6 mb-2 opacity-80" />
           <span>{error}</span>
         </div>
@@ -297,7 +330,7 @@ const Molecule3DViewer = ({
 
       {/* ── Empty ─────────────────────────────────────────────────── */}
       {!smiles && !isLoading && (
-        <div className="absolute inset-0 flex items-center justify-center text-slate-400 text-sm">
+        <div className="absolute inset-0 flex items-center justify-center text-sm text-slate-400">
           Waiting for molecule…
         </div>
       )}
