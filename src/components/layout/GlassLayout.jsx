@@ -16,12 +16,12 @@ const GlassLayout = ({ children }) => {
 
       {/* Main content area — margin responds to collapsed state */}
       <div
-        className={`flex-1 pr-6 py-6 transition-all duration-300 ease-in-out ${
+        className={`flex-1 pr-6 py-6 transition-all duration-300 ease-in-out flex flex-col ${
           isSidebarCollapsed ? 'ml-28' : 'ml-28 md:ml-72'
         }`}
       >
         <Header />
-        <div className="min-h-[calc(100vh-100px)] overflow-y-auto">
+        <div className="flex-1 min-h-0 overflow-y-auto">
           {children}
         </div>
       </div>

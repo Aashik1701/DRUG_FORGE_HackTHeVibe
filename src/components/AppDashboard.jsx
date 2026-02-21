@@ -29,10 +29,7 @@ const AppDashboard = () => {
   const [recentMolecules, setRecentMolecules] = useState([]);
   const [loadingHealth, setLoadingHealth] = useState(true);
 
-  const apiBase =
-    import.meta.env.VITE_API_URL ||
-    import.meta.env.VITE_FLASK_API_URL ||
-    'http://localhost:8000';
+  const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:5001';
 
   // Fetch model health on mount
   useEffect(() => {
@@ -86,7 +83,7 @@ const AppDashboard = () => {
   const onlineCount = loadedModels.length;
 
   return (
-    <div className="min-h-screen p-4 md:p-8 pb-24">
+    <div className="min-h-screen p-4 pb-24 md:p-8">
       <div className="max-w-6xl mx-auto space-y-8">
 
         {/* ─── Greeting ─────────────────────────────────────── */}
@@ -95,13 +92,13 @@ const AppDashboard = () => {
           animate={{ opacity: 1, y: 0 }}
           className="pt-8"
         >
-          <h1 className="text-4xl md:text-5xl font-thin tracking-tight text-gray-800 dark:text-gray-100">
+          <h1 className="text-4xl font-thin tracking-tight text-gray-800 md:text-5xl dark:text-gray-100">
             Welcome to your{' '}
-            <span className="bg-gradient-to-r from-cyan-500 to-violet-500 bg-clip-text text-transparent">
+            <span className="text-transparent bg-gradient-to-r from-cyan-500 to-violet-500 bg-clip-text">
               Lab
             </span>
           </h1>
-          <p className="text-gray-500 dark:text-gray-400 mt-2">
+          <p className="mt-2 text-gray-500 dark:text-gray-400">
             Paste a molecule below to start analyzing, or pick a recent one.
           </p>
         </motion.div>
@@ -114,31 +111,18 @@ const AppDashboard = () => {
         >
           <GlassPanel className="p-6 md:p-10">
             <form onSubmit={handleOmniboxSubmit} className="relative max-w-3xl mx-auto">
-              <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <Search className="absolute w-5 h-5 text-gray-400 -translate-y-1/2 left-5 top-1/2" />
               <input
                 type="text"
                 value={omniboxValue}
                 onChange={(e) => setOmniboxValue(e.target.value)}
                 placeholder="Enter SMILES, chemical name, or CID…"
-                className="w-full h-16 pl-14 pr-36 rounded-2xl
-                  bg-white/30 dark:bg-black/30
-                  backdrop-blur-md
-                  border border-white/30 dark:border-gray-700/30
-                  text-gray-900 dark:text-gray-100 text-lg font-mono
-                  placeholder-gray-400 dark:placeholder-gray-500
-                  focus:outline-none focus:ring-2 focus:ring-cyan-500/50
-                  transition-all duration-200"
+                className="w-full h-16 font-mono text-lg text-gray-900 placeholder-gray-400 transition-all duration-200 border pl-14 pr-36 rounded-2xl bg-white/30 dark:bg-black/30 backdrop-blur-md border-white/30 dark:border-gray-700/30 dark:text-gray-100 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
                 autoFocus
               />
               <button
                 type="submit"
-                className="absolute right-2 top-1/2 -translate-y-1/2
-                  h-12 px-8 rounded-xl
-                  bg-gradient-to-r from-cyan-500 to-violet-500
-                  text-white font-medium
-                  hover:shadow-glow-cyan active:scale-95
-                  transition-all duration-200
-                  flex items-center gap-2"
+                className="absolute flex items-center h-12 gap-2 px-8 font-medium text-white transition-all duration-200 -translate-y-1/2 right-2 top-1/2 rounded-xl bg-gradient-to-r from-cyan-500 to-violet-500 hover:shadow-glow-cyan active:scale-95"
               >
                 Analyze
                 <ArrowRight className="w-4 h-4" />
@@ -148,18 +132,18 @@ const AppDashboard = () => {
         </motion.div>
 
         {/* ─── System HUD + Recent Grid ────────────────────── */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-4">
 
           {/* System HUD */}
           <GlassCard className="p-6 lg:col-span-1" hoverable={false}>
-            <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-4">
+            <h3 className="mb-4 text-sm font-medium tracking-wider text-gray-500 uppercase dark:text-gray-400">
               System Status
             </h3>
 
             {loadingHealth ? (
               <div className="space-y-4">
-                <div className="h-4 w-full bg-white/10 rounded animate-shimmer" />
-                <div className="h-4 w-3/4 bg-white/10 rounded animate-shimmer" />
+                <div className="w-full h-4 rounded bg-white/10 animate-shimmer" />
+                <div className="w-3/4 h-4 rounded bg-white/10 animate-shimmer" />
               </div>
             ) : (
               <div className="space-y-5">
@@ -175,13 +159,13 @@ const AppDashboard = () => {
 
                 {/* Models Online */}
                 <div>
-                  <div className="flex justify-between text-sm mb-2">
+                  <div className="flex justify-between mb-2 text-sm">
                     <span className="text-gray-500 dark:text-gray-400">Models</span>
                     <span className="font-mono text-cyan-500">{onlineCount}/{totalModels}</span>
                   </div>
-                  <div className="h-2 bg-white/10 dark:bg-black/20 rounded-full overflow-hidden">
+                  <div className="h-2 overflow-hidden rounded-full bg-white/10 dark:bg-black/20">
                     <motion.div
-                      className="h-full bg-gradient-to-r from-cyan-500 to-violet-500 rounded-full"
+                      className="h-full rounded-full bg-gradient-to-r from-cyan-500 to-violet-500"
                       initial={{ width: 0 }}
                       animate={{ width: `${(onlineCount / totalModels) * 100}%` }}
                       transition={{ duration: 1, delay: 0.3 }}
@@ -202,7 +186,7 @@ const AppDashboard = () => {
                             ? 'bg-emerald-500'
                             : 'bg-gray-400 dark:bg-gray-600'
                         }`} />
-                        <span className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                        <span className="text-xs text-gray-500 truncate dark:text-gray-400">
                           {model.name}
                         </span>
                       </div>
@@ -215,19 +199,19 @@ const AppDashboard = () => {
 
           {/* Recent Activity - Masonry Glass Tiles */}
           <div className="lg:col-span-3">
-            <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-4">
+            <h3 className="mb-4 text-sm font-medium tracking-wider text-gray-500 uppercase dark:text-gray-400">
               Recent Molecules
             </h3>
             {recentMolecules.length === 0 ? (
               <GlassPanel className="flex flex-col items-center justify-center py-16 text-center">
-                <Beaker className="w-12 h-12 text-gray-400 dark:text-gray-500 mb-4" />
-                <p className="text-gray-500 dark:text-gray-400 mb-2">No recent analyses yet</p>
+                <Beaker className="w-12 h-12 mb-4 text-gray-400 dark:text-gray-500" />
+                <p className="mb-2 text-gray-500 dark:text-gray-400">No recent analyses yet</p>
                 <p className="text-sm text-gray-400 dark:text-gray-500">
                   Use the search bar above to analyze your first molecule.
                 </p>
               </GlassPanel>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {recentMolecules.map((mol, i) => (
                   <motion.div
                     key={mol.smiles || i}
@@ -239,7 +223,7 @@ const AppDashboard = () => {
                       className="p-5 cursor-pointer"
                       onClick={() => handleRecentClick(mol.smiles)}
                     >
-                      <code className="text-sm font-mono text-gray-700 dark:text-gray-300 block truncate mb-2">
+                      <code className="block mb-2 font-mono text-sm text-gray-700 truncate dark:text-gray-300">
                         {mol.smiles}
                       </code>
                       <div className="flex items-center justify-between">
@@ -256,10 +240,10 @@ const AppDashboard = () => {
 
         {/* ─── Quick Actions Row ───────────────────────────── */}
         <div>
-          <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-4">
+          <h3 className="mb-4 text-sm font-medium tracking-wider text-gray-500 uppercase dark:text-gray-400">
             Quick Actions
           </h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
             {[
               { label: 'Lab Bench', desc: 'Analyze a molecule', path: '/app/analyze', icon: FlaskConical, color: 'cyan' },
               { label: 'Batch Process', desc: 'Upload CSV', path: '/app/batch', icon: BarChart3, color: 'violet' },
@@ -277,10 +261,10 @@ const AppDashboard = () => {
               >
                 <GlassCard className="p-5">
                   <action.icon className={`w-7 h-7 mb-3 text-${action.color}-500`} />
-                  <h4 className="font-medium text-gray-800 dark:text-gray-200 text-sm">
+                  <h4 className="text-sm font-medium text-gray-800 dark:text-gray-200">
                     {action.label}
                   </h4>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                     {action.desc}
                   </p>
                 </GlassCard>

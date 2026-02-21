@@ -256,15 +256,15 @@ const LabBench = () => {
   const apiBase =
     import.meta.env.VITE_API_URL ||
     import.meta.env.VITE_FLASK_API_URL ||
-    'http://localhost:8000';
+    'http://localhost:5001';
 
   const getApiCandidates = useCallback(() => {
     return [
       apiBase,
-      'http://localhost:8000',
-      'http://127.0.0.1:8000',
       'http://localhost:5001',
       'http://127.0.0.1:5001',
+      'http://localhost:8000',
+      'http://127.0.0.1:8000',
     ].filter((v, idx, arr) => Boolean(v) && arr.indexOf(v) === idx);
   }, [apiBase]);
 
@@ -286,8 +286,8 @@ const LabBench = () => {
     setRunningModels(prev => new Set(prev).add(model.id));
     try {
       const apiCandidates = getApiCandidates();
-      let lastError = null;
       let data = null;
+      let lastError = null;
 
       for (const base of apiCandidates) {
         try {
@@ -475,7 +475,7 @@ const LabBench = () => {
                     <Atom className="w-5 h-5 mr-2 text-bio-teal" />
                     Structure Viewer
                   </h3>
-                  <div className="flex rounded-lg border border-white/20 overflow-hidden text-xs font-medium">
+                  <div className="flex overflow-hidden text-xs font-medium border rounded-lg border-white/20">
                     <button
                       onClick={() => setViewMode('2d')}
                       className={`px-3 py-1.5 transition-all ${
