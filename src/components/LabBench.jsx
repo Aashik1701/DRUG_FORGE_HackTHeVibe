@@ -11,6 +11,7 @@ import GlassCard, { GlassPanel, GlassButton, GlassBadge } from './ui/GlassCard';
 import { ShimmerBlock, ShimmerText } from './ui/ShimmerLoader';
 import RDKitMolecularVisualization from './RDKitMolecularVisualization';
 import Molecule3DViewer from './Molecule3DViewer';
+import { useDrugForge } from '../context/DrugForgeContext';
 
 // ────────────────────────────────────────────────────────────
 //  MODEL DEFINITIONS
@@ -253,20 +254,8 @@ const LabBench = () => {
   const [viewMode, setViewMode] = useState('3d'); // '2d' | '3d'
   const inputRef = useRef(null);
 
-  const apiBase =
-    import.meta.env.VITE_API_URL ||
-    import.meta.env.VITE_FLASK_API_URL ||
-    'http://localhost:5001';
-
-  const getApiCandidates = useCallback(() => {
-    return [
-      apiBase,
-      'http://localhost:5001',
-      'http://127.0.0.1:5001',
-      'http://localhost:8000',
-      'http://127.0.0.1:8000',
-    ].filter((v, idx, arr) => Boolean(v) && arr.indexOf(v) === idx);
-  }, [apiBase]);
+  const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+  const { setActiveContext } = useDrugForge();
 
   // Auto-analyze if smiles came from URL params
   useEffect(() => {
@@ -279,41 +268,34 @@ const LabBench = () => {
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // ─── Tell the AI Chat what we're analyzing ──────────────
+  useEffect(() => {
+    if (smiles && Object.keys(results).length > 0) {
+      setActiveContext({
+        smiles,
+        results,
+        activeTab,
+        timestamp: new Date().toISOString(),
+      });
+    }
+  }, [smiles, results, activeTab, setActiveContext]);
+
   const currentModels = activeTab === 'admet' ? ADMET_MODELS : TARGET_MODELS;
 
   // ─── Run a single model ──────────────────────────────
   const runModel = useCallback(async (model, smilesInput) => {
     setRunningModels(prev => new Set(prev).add(model.id));
     try {
-      const apiCandidates = getApiCandidates();
-      let data = null;
-      let lastError = null;
-
-      for (const base of apiCandidates) {
-        try {
-          const res = await fetch(`${base}${model.endpoint}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ smiles: smilesInput }),
-          });
-
-          if (!res.ok) {
-            const err = await res.json().catch(() => ({}));
-            lastError = new Error(err.detail || err.error || `HTTP ${res.status}`);
-            continue;
-          }
-
-          data = await res.json();
-          break;
-        } catch (err) {
-          lastError = err;
-        }
+      const res = await fetch(`${apiBase}${model.endpoint}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ smiles: smilesInput }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.detail || err.error || `HTTP ${res.status}`);
       }
-
-      if (!data) {
-        throw lastError || new Error('Failed to fetch prediction');
-      }
-
+      const data = await res.json();
       setResults(prev => ({ ...prev, [model.id]: { raw: data } }));
     } catch (err) {
       setResults(prev => ({ ...prev, [model.id]: { error: err.message } }));
@@ -324,7 +306,7 @@ const LabBench = () => {
         return next;
       });
     }
-  }, [getApiCandidates]);
+  }, [apiBase]);
 
   // ─── Run all models (ADMET + Targets) simultaneously ──
   const runAllModels = useCallback((smilesInput) => {

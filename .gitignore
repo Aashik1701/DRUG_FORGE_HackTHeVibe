@@ -40,5 +40,4 @@ __pycache__/
 backendML/venv
 backend/venv
 /backendML/__pycache__/
-build/
 /docs
