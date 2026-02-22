@@ -1,4 +1,4 @@
-# 🧬 DrugForge 2.0
+# 🧬 DrugForge
 ### **The AI Lab That Fits in Your Browser**
 
 > Turn a chemical formula into a 3D molecule with safety predictions in under 3 seconds — no PhD required.
@@ -1073,18 +1073,7 @@ This project stands on the shoulders of giants:
 - 📚 **MoleculeNet** — Benchmark datasets (Stanford University)
 - 🧠 **DeepChem** — ML for chemistry inspiration (Bharath Ramsundar & team)
 
-**Special Thanks:**
-- 💻 **Intel** — AI optimization tools and support for model training
-- 🚀 **Vercel** — Lightning-fast frontend hosting
-- 🐳 **Render** — Reliable backend deployment
-- 🌐 **Open Source Community** — Thousands of contributors to libraries we use daily
 
-**Inspiration:**
-- 🏆 **AlphaFold** (DeepMind) — Showed AI can revolutionize molecular biology
-- 💊 **Atomwise** — Pioneered AI for drug discovery at scale
-- 🔬 **Schrödinger** — Set the standard for computational chemistry tools
-
----
 
 ## 📞 Support & Community
 

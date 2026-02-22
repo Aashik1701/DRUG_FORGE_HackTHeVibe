@@ -5,10 +5,8 @@
 
 import axios from 'axios';
 
-const API_URL =
-  import.meta.env.VITE_API_URL ||
-  import.meta.env.VITE_FLASK_API_URL ||
-  'http://localhost:8000';
+// Base API URL - FastAPI backend on port 5001
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
 
 // Create axios instance with base config
 const apiClient = axios.create({
@@ -74,9 +72,16 @@ export const healthService = {
   listModels: () => apiClient.get('/models'),
 };
 
+export const dockingService = {
+  startDocking: (smiles, target) => apiClient.post('/api/dock/start', { smiles, target }),
+  getDockingStatus: (taskId) => apiClient.get(`/api/dock/status/${taskId}`),
+  getReceptor: (target) => apiClient.get(`/api/dock/receptor/${target}`),
+};
+
 export { apiClient };
 
 export default {
   predictionService,
   healthService,
+  dockingService,
 };
